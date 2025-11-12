@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
     - name: 🔍 Debug Info
       run: |
@@ -16,7 +16,7 @@ jobs:
         echo "Username: ${{ secrets.VPS_USERNAME }}"
         echo "Port: ${{ secrets.VPS_PORT }}"
         echo "Key présent: ${{ secrets.VPS_SSH_KEY != '' }}"
-
+    
     - name: 🚀 Deploy via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -26,6 +26,14 @@ jobs:
         port: ${{ secrets.VPS_PORT }}
         debug: true
         script: |
+          # Charger NVM
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+          # Utiliser la bonne version de Node
+          nvm use 18.20.8
+
+          # Déploiement
           echo "✅ Connexion SSH réussie !"
           whoami
           pwd
@@ -33,7 +41,5 @@ jobs:
           git pull origin main
           npm ci --production
           npm run build
-          # Utilisation du chemin complet pour PM2
-          /home/deployer/.nvm/versions/node/v18.20.8/bin/pm2 restart frontend || \
-          /home/deployer/.nvm/versions/node/v18.20.8/bin/pm2 start npm --name "frontend" -- start
-          /home/deployer/.nvm/versions/node/v18.20.8/bin/pm2 save
+          pm2 restart frontend || pm2 start npm --name "frontend" -- start
+          pm2 save
