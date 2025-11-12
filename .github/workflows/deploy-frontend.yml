@@ -40,7 +40,7 @@ jobs:
         key: ${{ secrets.VPS_SSH_KEY }}
         port: ${{ secrets.VPS_PORT }}
         script: |
-          cd /var/www/letussign/frontend
+          cd /var/www/letussign/frontend/LetUsSignFront
           git pull origin main
           npm ci
           npm run build
