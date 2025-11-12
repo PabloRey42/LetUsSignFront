@@ -1,51 +1,48 @@
-name: Deploy Frontend
+name: 🚀 Deploy Frontend
 
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-    
-    - name: Install dependencies
-      run: |
-        cd frontend
-        npm ci
-    
-    - name: Build
-      run: |
-        cd frontend
-        npm run build
-      env:
-        NODE_ENV: production
-    
-    - name: Deploy to VPS
+    - name: 🚀 Deploy to VPS
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.VPS_HOST }}
         username: ${{ secrets.VPS_USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
         port: ${{ secrets.VPS_PORT }}
+        command_timeout: 10m
         script: |
+          echo "════════════════════════════════════"
+          echo "🚀 Déploiement LetUsSignFront"
+          echo "════════════════════════════════════"
+          
           cd /var/www/letussign/frontend/LetUsSignFront
+          
+          echo "📥 Git pull..."
           git pull origin main
-          npm ci
+          
+          echo "📦 Installation des dépendances..."
+          npm ci --production
+          
+          echo "🔨 Build..."
           npm run build
+          
+          echo "♻️ Redémarrage PM2..."
           pm2 restart frontend || pm2 start npm --name "frontend" -- start
           pm2 save
+          
+          echo "════════════════════════════════════"
+          echo "✅ Déploiement terminé !"
+          echo "════════════════════════════════════"
+          pm2 status
     
-    - name: Notification
-      run: echo "✅ Frontend déployé avec succès sur app.letussign.fr"
+    - name: ✅ Success
+      if: success()
+      run: echo "🎉 Frontend déployé sur https://app.letussign.fr"
