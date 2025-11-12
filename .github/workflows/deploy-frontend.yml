@@ -10,39 +10,28 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: 🚀 Deploy to VPS
-      uses: appleboy/ssh-action@master
+    - name: 🔍 Debug Info
+      run: |
+        echo "Host: ${{ secrets.VPS_HOST }}"
+        echo "Username: ${{ secrets.VPS_USERNAME }}"
+        echo "Port: ${{ secrets.VPS_PORT }}"
+        echo "Key présent: ${{ secrets.VPS_SSH_KEY != '' }}"
+    
+    - name: 🚀 Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.VPS_HOST }}
         username: ${{ secrets.VPS_USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
         port: ${{ secrets.VPS_PORT }}
-        command_timeout: 10m
+        debug: true
         script: |
-          echo "════════════════════════════════════"
-          echo "🚀 Déploiement LetUsSignFront"
-          echo "════════════════════════════════════"
-          
+          echo "✅ Connexion SSH réussie !"
+          whoami
+          pwd
           cd /var/www/letussign/frontend/LetUsSignFront
-          
-          echo "📥 Git pull..."
           git pull origin main
-          
-          echo "📦 Installation des dépendances..."
           npm ci --production
-          
-          echo "🔨 Build..."
           npm run build
-          
-          echo "♻️ Redémarrage PM2..."
           pm2 restart frontend || pm2 start npm --name "frontend" -- start
           pm2 save
-          
-          echo "════════════════════════════════════"
-          echo "✅ Déploiement terminé !"
-          echo "════════════════════════════════════"
-          pm2 status
-    
-    - name: ✅ Success
-      if: success()
-      run: echo "🎉 Frontend déployé sur https://app.letussign.fr"
